@@ -1,0 +1,55 @@
+[
+  {
+    "id": "TCK-102260",
+    "timestamp": "2026-05-06T22:13:57.043968",
+    "category": "Voice & Calls",
+    "sentiment": "Negative",
+    "feedback": "Why are my calls dropping frequently and help me fix it.",
+    "confidence": 95,
+    "status": "Pending"
+  },
+  {
+    "id": "TCK-272634",
+    "timestamp": "2026-05-06T21:44:09.210648",
+    "category": "Network Connectivity",
+    "sentiment": "Negative",
+    "feedback": "The singal droped again while I was on a super imprtant call!! \ud83d\ude21\ud83e\udd2c Fix your awfull network immediatly. I am swiching providers tomorow. \ud83d\udcc9\ud83d\udeab",
+    "confidence": 99,
+    "status": "Pending"
+  },
+  {
+    "timestamp": "2026-05-06T19:35:29.716520",
+    "category": "Network Connectivity",
+    "sentiment": "Negative",
+    "feedback": "whyy is my internert so sloww today??? \ud83d\udc0c\ud83d\ude24 i cant even wacth a bideo without it buffring every 5 secinds. totally unaccptable \ud83d\udc4e",
+    "confidence": 99
+  },
+  {
+    "timestamp": "2026-05-06T19:35:06.410589",
+    "category": "Plan & Subscription",
+    "sentiment": "Neutral",
+    "feedback": "migrated to the new plann yesterdy. price is alrite but im waiting to see if the covrage actually improves like u promised \ud83e\uddd0\ud83d\udcf1",
+    "confidence": 80
+  },
+  {
+    "timestamp": "2026-05-06T19:34:38.803845",
+    "category": "Network Connectivity",
+    "sentiment": "Positive",
+    "feedback": "woww this is the best experince everrr!! \ud83c\udf89\ud83d\udcaf no interuptions all day. keep up the gret work guyys \ud83e\udd47\ud83d\ude4c",
+    "confidence": 100
+  },
+  {
+    "timestamp": "2026-05-06T19:34:07.237742",
+    "category": "Network Connectivity",
+    "sentiment": "Positive",
+    "feedback": "woww this is the best experince everrr!! \ud83c\udf89\ud83d\udcaf no interuptions all day. keep up the gret work guyys \ud83e\udd47\ud83d\ude4c",
+    "confidence": 100
+  },
+  {
+    "timestamp": "2026-05-06T19:33:47.626019",
+    "category": "Network Connectivity",
+    "sentiment": "Negative",
+    "feedback": "The singal droped again while I was on a super imprtant call!! \ud83d\ude21\ud83e\udd2c Fix your awfull network immediatly. I am swiching providers tomorow. \ud83d\udcc9\ud83d\udeab",
+    "confidence": 99
+  }
+]

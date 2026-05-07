@@ -1,0 +1,2 @@
+This file will hold the extracted text used for retrieval.
+You can replace its contents with your actual documents.

@@ -1,0 +1,95 @@
+# =============================================
+# Python Virtual Environments (BIGGEST culprits)
+# =============================================
+# The "Zends/" subfolder IS a venv with PyTorch etc. (~GBs)
+Zends/
+venv/
+.venv/
+env/
+ENV/
+pyvenv.cfg
+
+# =============================================
+# Python bytecode / cache
+# =============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# =============================================
+# AI / ML model checkpoints & weights
+# =============================================
+# project_root/results/ has 3 checkpoints (~2.4 GB)
+project_root/results/
+results/
+checkpoints/
+models/
+*.safetensors
+*.pth
+*.pt
+*.ckpt
+*.bin
+*.h5
+*.hdf5
+*.onnx
+*.tflite
+
+# =============================================
+# Vector / Index files (regenerable)
+# =============================================
+*.faiss
+*.pkl
+storage/
+storage_v2/
+
+# =============================================
+# Node.js
+# =============================================
+node_modules/
+.next/
+dist/
+build/
+
+# =============================================
+# Environment variables / secrets
+# =============================================
+.env
+.env.*
+
+# =============================================
+# OS generated files
+# =============================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# =============================================
+# Logs
+# =============================================
+*.log
+logs/
+
+# =============================================
+# IDE / Editor
+# =============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =============================================
+# Jupyter Notebook checkpoints
+# =============================================
+.ipynb_checkpoints/
+
+# =============================================
+# Distribution / Packaging
+# =============================================
+*.egg-info/
+*.egg
+dist/
+build/
