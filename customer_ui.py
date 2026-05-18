@@ -3,6 +3,7 @@ import random
 import time
 import json
 import os
+import requests
 from datetime import datetime
 
 import sys
@@ -47,6 +48,7 @@ if theme == "Light Mode":
         --neg-color:   #dc2626;
         --mix-color:   #7c3aed;
         --radius:      14px;
+        --bg-hover:    #f3f4f6;
     }
     """
 else:
@@ -67,6 +69,7 @@ else:
         --neg-color:   #ff453a;
         --mix-color:   #9b7dff;
         --radius:      14px;
+        --bg-hover:    #172336;
     }
     """
 
@@ -329,6 +332,20 @@ label, .stSelectbox label, .stTextArea label {
     letter-spacing: .08em !important;
     text-transform: uppercase !important;
 }
+
+/* ── Tabs Style ── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2rem;
+}
+.stTabs [data-baseweb="tab"] {
+    height: 3rem;
+    white-space: pre-wrap;
+    background-color: transparent;
+    border-radius: 4px 4px 0px 0px;
+    padding: 0 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -381,6 +398,8 @@ def analyze_feedback(text: str):
         bert_score = 0.5
 
     # 2. Groq LLM Reasoning & Refinement
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     if not Groq or not os.environ.get("GROQ_API_KEY"):
         return "Neutral", 0.5, "Customer Support", "Groq API missing. Mock response."
         
@@ -458,247 +477,358 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ── FAQ Section
-st.markdown('<div class="card"><div class="card-title">✦ Frequently Asked Questions</div>', unsafe_allow_html=True)
 
-faq_category = st.selectbox("Select FAQ Category", [
-    "Mobile Network", 
-    "Broadband Service", 
-    "Billing & Payments", 
-    "Customer Support", 
-    "Mobile App Issues", 
-    "Service Activation"
-])
+tab_customer, tab_rag = st.tabs(["💬 Customer Portal", "⚙️ RAG Document Management"])
 
-if faq_category == "Mobile Network":
-    st.markdown("**What my Mobile network services include:**\n- 5G mobile connectivity\n- Voice calling\n- SMS messaging\n- International roaming\n- SIM and eSIM provisioning\n- Data add-on packages")
-    with st.expander("Q1: Why is my mobile network signal weak?"):
-        st.write("**Possible causes:** low coverage area, indoor obstruction, or temporary network maintenance.")
-        st.write("**Solution:** Move to an open area or restart the device. If the issue persists, contact support.")
-    with st.expander("Q2: Why is my mobile data not working?"):
-        st.write("**Possible causes:** Data pack expired, APN configuration issues, or temporary network outage.")
-        st.write("**Solution:** Check mobile data settings or restart your device.")
-    with st.expander("Q3: Why are my calls dropping frequently?"):
-        st.write("**Possible causes:** Network congestion, weak signal, or device compatibility issues.")
-        st.write("**Solution:** Switch to 4G/5G mode or move to a stronger signal location.")
-
-elif faq_category == "Broadband Service":
-    st.markdown("**ZENDS provides high-speed fiber broadband services including:**\n- ZENDFiber Home 100 Mbps\n- ZENDFiber Home 300 Mbps\n- ZENDFiber Home 1 Gbps")
-    with st.expander("Q1: Why is my broadband internet slow?"):
-        st.write("**Possible causes:** Network congestion, router issues, or high number of connected devices.")
-        st.write("**Solution:** Restart the router and check connected devices.")
-    with st.expander("Q2: My internet is completely down. What should I do?"):
-        st.write("**Possible causes:** Fiber cable damage, service outage, or router malfunction.")
-        st.write("**Solution:** Restart modem/router. If the issue continues, report it to support.")
-
-elif faq_category == "Billing & Payments":
-    st.markdown("**ZENDS follows monthly advance billing.**")
-    with st.expander("Q1: Why is my bill higher than expected?"):
-        st.write("**Possible reasons:** Extra data usage, international roaming charges, or add-on services.")
-    with st.expander("Q2: When is my payment due?"):
-        st.write("Bills must be paid within 7 days of invoice generation. Late payment may lead to temporary service suspension.")
-    with st.expander("Q3: Can I get a refund?"):
-        st.write("**Refund policy:** Full refund within 7 days if usage is below 10%. Cloud services are non-refundable after activation.")
-
-elif faq_category == "Customer Support":
-    st.markdown("**ZENDS provides 24×7 support services.**")
-    with st.expander("Q1: How can I contact customer support?"):
-        st.markdown("Customers can reach support via:\n- Mobile App\n- Website chat\n- Phone support\n- Email support")
-    with st.expander("Q2: What are the support levels?"):
-        st.markdown("Support tiers include:\n- Standard Support\n- Priority Support\n- Enterprise Dedicated Support")
-
-elif faq_category == "Mobile App Issues":
-    st.markdown("**Customers use the ZENDS mobile app for:**\n- Bill payments\n- Plan upgrades\n- Data usage monitoring\n- Support requests")
-    with st.expander("Issue 1: App login failure"):
-        st.write("**Solution:** Reset password, clear app cache, update the application.")
-    with st.expander("Issue 2: Payment failure in the app"):
-        st.write("**Solution:** Verify payment gateway, check internet connectivity, retry transaction.")
-
-elif faq_category == "Service Activation":
-    st.markdown("**Common Issues**")
-    with st.expander("New SIM activation delay"):
-        st.write("Activation may take up to 24 hours.")
-    with st.expander("Broadband installation delay"):
-        st.write("Installation may take 3–5 business days.")
-    with st.expander("eSIM activation failure"):
-        st.write("Restart device and rescan QR code.")
-    with st.expander("Mobile plan upgrade delay"):
-        st.write("Changes may reflect within 2 hours.")
-    with st.expander("Broadband plan upgrade delay"):
-        st.write("Upgrade processed within 24 hours.")
-    with st.expander("SIM replacement activation delay"):
-        st.write("Replacement activation takes 4–6 hours.")
-    with st.expander("International roaming activation delay"):
-        st.write("Roaming services may take 1 hour to activate.")
-    with st.expander("Add-on data pack activation delay"):
-        st.write("Data pack activates instantly or within 10 minutes.")
-    with st.expander("Payment verification delay"):
-        st.write("Payments may take up to 30 minutes to reflect.")
-    with st.expander("New customer account verification delay"):
-        st.write("Identity verification may take up to 24 hours.")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ── Input Card
-st.markdown('<div class="card"><div class="card-title">✦ Submit Your Feedback</div>', unsafe_allow_html=True)
-
-lang = st.session_state.get("language", "English")
-
-feedback_text = st.text_area(
-    "Your Message" if lang == "English" else ("Su Mensaje" if lang == "Español" else "Votre Message"),
-    placeholder=t("feedback_placeholder", lang),
-    height=130,
-    key="feedback_input",
-)
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    account_type = st.selectbox("Account Type", ["Prepaid", "Postpaid", "Business", "Enterprise"])
-with col2:
-    department = st.selectbox("Department", [
-        "Mobile Network", "Broadband Service", "Billing & Payments", 
-        "Customer Support", "Mobile App Issues", "Service Activation", "Other"
+with tab_customer:
+    # ── FAQ Section
+    st.markdown('<div class="card"><div class="card-title">✦ Frequently Asked Questions</div>', unsafe_allow_html=True)
+    
+    faq_category = st.selectbox("Select FAQ Category", [
+        "Mobile Network", 
+        "Broadband Service", 
+        "Billing & Payments", 
+        "Customer Support", 
+        "Mobile App Issues", 
+        "Service Activation"
     ])
-with col3:
-    priority = st.selectbox("Priority Level", ["Normal", "Urgent", "Critical"])
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# ── Submit
-def mark_resolved(t_id):
-    feed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "project_root", "data", "live_feedback.json")
-    try:
-        if os.path.exists(feed_path):
-            with open(feed_path, "r", encoding="utf-8") as f: feed_data = json.load(f)
-            for item in feed_data:
-                if item.get("id") == t_id:
-                    item["status"] = "Resolved"
-                    break
-            with open(feed_path, "w", encoding="utf-8") as f: json.dump(feed_data, f, indent=2)
-            st.toast("✅ Ticket marked as resolved!")
-    except Exception: pass
-
-submitted = st.button(t("btn_analyze", lang), use_container_width=True)
-
-# ── Processing & Results
-if submitted and feedback_text.strip():
-
-    with st.spinner(""):
-        progress = st.progress(0, text="Initializing NLP pipeline…")
-        
-        progress.progress(25, text="Running DistilBERT & Groq LLM reasoning…")
-        sentiment, confidence, category, reasoning = analyze_feedback(feedback_text)
-        
-        progress.progress(75, text="Retrieving relevant policies via RAG…")
-        rag_docs  = get_rag_docs(category)
-        
-        progress.progress(100, text="Generating AI response via Groq…")
-        ai_reply  = generate_response(sentiment, category, feedback_text, reasoning, rag_docs, lang)
-        
-        time.sleep(0.3)
-        progress.empty()
-
-        ticket_id = f"TCK-{random.randint(100000,999999)}" if sentiment in ["Negative", "Mixed"] else None
-        
-        # Wire up Live Feed for Analyst Dashboard
+    
+    if faq_category == "Mobile Network":
+        st.markdown("**What my Mobile network services include:**\n- 5G mobile connectivity\n- Voice calling\n- SMS messaging\n- International roaming\n- SIM and eSIM provisioning\n- Data add-on packages")
+        with st.expander("Q1: Why is my mobile network signal weak?"):
+            st.write("**Possible causes:** low coverage area, indoor obstruction, or temporary network maintenance.")
+            st.write("**Solution:** Move to an open area or restart the device. If the issue persists, contact support.")
+        with st.expander("Q2: Why is my mobile data not working?"):
+            st.write("**Possible causes:** Data pack expired, APN configuration issues, or temporary network outage.")
+            st.write("**Solution:** Check mobile data settings or restart your device.")
+        with st.expander("Q3: Why are my calls dropping frequently?"):
+            st.write("**Possible causes:** Network congestion, weak signal, or device compatibility issues.")
+            st.write("**Solution:** Switch to 4G/5G mode or move to a stronger signal location.")
+    
+    elif faq_category == "Broadband Service":
+        st.markdown("**ZENDS provides high-speed fiber broadband services including:**\n- ZENDFiber Home 100 Mbps\n- ZENDFiber Home 300 Mbps\n- ZENDFiber Home 1 Gbps")
+        with st.expander("Q1: Why is my broadband internet slow?"):
+            st.write("**Possible causes:** Network congestion, router issues, or high number of connected devices.")
+            st.write("**Solution:** Restart the router and check connected devices.")
+        with st.expander("Q2: My internet is completely down. What should I do?"):
+            st.write("**Possible causes:** Fiber cable damage, service outage, or router malfunction.")
+            st.write("**Solution:** Restart modem/router. If the issue continues, report it to support.")
+    
+    elif faq_category == "Billing & Payments":
+        st.markdown("**ZENDS follows monthly advance billing.**")
+        with st.expander("Q1: Why is my bill higher than expected?"):
+            st.write("**Possible reasons:** Extra data usage, international roaming charges, or add-on services.")
+        with st.expander("Q2: When is my payment due?"):
+            st.write("Bills must be paid within 7 days of invoice generation. Late payment may lead to temporary service suspension.")
+        with st.expander("Q3: Can I get a refund?"):
+            st.write("**Refund policy:** Full refund within 7 days if usage is below 10%. Cloud services are non-refundable after activation.")
+    
+    elif faq_category == "Customer Support":
+        st.markdown("**ZENDS provides 24×7 support services.**")
+        with st.expander("Q1: How can I contact customer support?"):
+            st.markdown("Customers can reach support via:\n- Mobile App\n- Website chat\n- Phone support\n- Email support")
+        with st.expander("Q2: What are the support levels?"):
+            st.markdown("Support tiers include:\n- Standard Support\n- Priority Support\n- Enterprise Dedicated Support")
+    
+    elif faq_category == "Mobile App Issues":
+        st.markdown("**Customers use the ZENDS mobile app for:**\n- Bill payments\n- Plan upgrades\n- Data usage monitoring\n- Support requests")
+        with st.expander("Issue 1: App login failure"):
+            st.write("**Solution:** Reset password, clear app cache, update the application.")
+        with st.expander("Issue 2: Payment failure in the app"):
+            st.write("**Solution:** Verify payment gateway, check internet connectivity, retry transaction.")
+    
+    elif faq_category == "Service Activation":
+        st.markdown("**Common Issues**")
+        with st.expander("New SIM activation delay"):
+            st.write("Activation may take up to 24 hours.")
+        with st.expander("Broadband installation delay"):
+            st.write("Installation may take 3–5 business days.")
+        with st.expander("eSIM activation failure"):
+            st.write("Restart device and rescan QR code.")
+        with st.expander("Mobile plan upgrade delay"):
+            st.write("Changes may reflect within 2 hours.")
+        with st.expander("Broadband plan upgrade delay"):
+            st.write("Upgrade processed within 24 hours.")
+        with st.expander("SIM replacement activation delay"):
+            st.write("Replacement activation takes 4–6 hours.")
+        with st.expander("International roaming activation delay"):
+            st.write("Roaming services may take 1 hour to activate.")
+        with st.expander("Add-on data pack activation delay"):
+            st.write("Data pack activates instantly or within 10 minutes.")
+        with st.expander("Payment verification delay"):
+            st.write("Payments may take up to 30 minutes to reflect.")
+        with st.expander("New customer account verification delay"):
+            st.write("Identity verification may take up to 24 hours.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ── Input Card
+    st.markdown('<div class="card"><div class="card-title">✦ Submit Your Feedback</div>', unsafe_allow_html=True)
+    
+    lang = st.session_state.get("language", "English")
+    
+    feedback_text = st.text_area(
+        "Your Message" if lang == "English" else ("Su Mensaje" if lang == "Español" else "Votre Message"),
+        placeholder=t("feedback_placeholder", lang),
+        height=130,
+        key="feedback_input",
+    )
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        account_type = st.selectbox("Account Type", ["Prepaid", "Postpaid", "Business", "Enterprise"])
+    with col2:
+        department = st.selectbox("Department", [
+            "Mobile Network", "Broadband Service", "Billing & Payments", 
+            "Customer Support", "Mobile App Issues", "Service Activation", "Other"
+        ])
+    with col3:
+        priority = st.selectbox("Priority Level", ["Normal", "Urgent", "Critical"])
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # ── Submit
+    def mark_resolved(t_id):
+        feed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "project_root", "data", "live_feedback.json")
         try:
-            data_record = {
-                "id": ticket_id or f"FB-{random.randint(10000,99999)}",
-                "timestamp": datetime.now().isoformat(),
-                "category": category,
-                "sentiment": sentiment,
-                "feedback": feedback_text,
-                "confidence": int(confidence*100),
-                "status": "Pending" if ticket_id else "No Action"
-            }
-            feed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "project_root", "data", "live_feedback.json")
             if os.path.exists(feed_path):
-                with open(feed_path, "r", encoding="utf-8") as f:
-                    feed_data = json.load(f)
-            else:
-                feed_data = []
-            feed_data.insert(0, data_record)
-            with open(feed_path, "w", encoding="utf-8") as f:
-                json.dump(feed_data[:50], f, indent=2)
-        except Exception as e:
-            pass
-
-    # Sentiment result
-    pill_cls = {"Positive": "pill-pos pill-active-pos", "Neutral": "pill-neu pill-active-neu", "Mixed": "pill-mix pill-active-mix", "Negative": "pill-neg pill-active-neg"}[sentiment]
-    icon     = {"Positive": "●", "Neutral": "◐", "Mixed": "◑", "Negative": "●"}[sentiment]
-
-    st.markdown(f"""
-    <div class="card">
-        <div class="card-title">✦ Analysis Results</div>
-        <div class="sentiment-row">
-            <div class="pill {pill_cls}">{icon} {sentiment} Sentiment</div>
-            <div class="pill" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:#8aaccc;">
-                📂 {category}
+                with open(feed_path, "r", encoding="utf-8") as f: feed_data = json.load(f)
+                for item in feed_data:
+                    if item.get("id") == t_id:
+                        item["status"] = "Resolved"
+                        break
+                with open(feed_path, "w", encoding="utf-8") as f: json.dump(feed_data, f, indent=2)
+                st.toast("✅ Ticket marked as resolved!")
+        except Exception: pass
+    
+    submitted = st.button(t("btn_analyze", lang), use_container_width=True)
+    
+    # ── Processing & Results
+    if submitted and feedback_text.strip():
+    
+        with st.spinner(""):
+            progress = st.progress(0, text="Initializing NLP pipeline…")
+            
+            progress.progress(25, text="Running DistilBERT & Groq LLM reasoning…")
+            sentiment, confidence, category, reasoning = analyze_feedback(feedback_text)
+            
+            progress.progress(75, text="Retrieving relevant policies via RAG…")
+            rag_docs  = get_rag_docs(category)
+            
+            progress.progress(100, text="Generating AI response via Groq…")
+            ai_reply  = generate_response(sentiment, category, feedback_text, reasoning, rag_docs, lang)
+            
+            time.sleep(0.3)
+            progress.empty()
+    
+            ticket_id = f"TCK-{random.randint(100000,999999)}" if sentiment in ["Negative", "Mixed"] else None
+            
+            # Wire up Live Feed for Analyst Dashboard
+            try:
+                data_record = {
+                    "id": ticket_id or f"FB-{random.randint(10000,99999)}",
+                    "timestamp": datetime.now().isoformat(),
+                    "category": category,
+                    "sentiment": sentiment,
+                    "feedback": feedback_text,
+                    "confidence": int(confidence*100),
+                    "status": "Pending" if ticket_id else "No Action"
+                }
+                feed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "project_root", "data", "live_feedback.json")
+                if os.path.exists(feed_path):
+                    with open(feed_path, "r", encoding="utf-8") as f:
+                        feed_data = json.load(f)
+                else:
+                    feed_data = []
+                feed_data.insert(0, data_record)
+                with open(feed_path, "w", encoding="utf-8") as f:
+                    json.dump(feed_data[:50], f, indent=2)
+            except Exception as e:
+                pass
+    
+        # Sentiment result
+        pill_cls = {"Positive": "pill-pos pill-active-pos", "Neutral": "pill-neu pill-active-neu", "Mixed": "pill-mix pill-active-mix", "Negative": "pill-neg pill-active-neg"}[sentiment]
+        icon     = {"Positive": "●", "Neutral": "◐", "Mixed": "◑", "Negative": "●"}[sentiment]
+    
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">✦ Analysis Results</div>
+            <div class="sentiment-row">
+                <div class="pill {pill_cls}">{icon} {sentiment} Sentiment</div>
+                <div class="pill" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:#8aaccc;">
+                    📂 {category}
+                </div>
+                <div class="pill" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:#8aaccc;">
+                    ⚡ {priority} Priority
+                </div>
             </div>
-            <div class="pill" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:#8aaccc;">
-                ⚡ {priority} Priority
+            <div style="color:var(--text-muted);font-size:.8rem;margin-bottom:.4rem;">Model Confidence</div>
+            <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:{int(confidence*100)}%"></div></div>
+            <div style="color:var(--text-muted);font-size:.75rem;margin-top:.4rem;text-align:right;">{int(confidence*100)}%</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+        # RAG Documents
+        st.markdown('<div class="card"><div class="card-title">✦ Retrieved Policy Documents (RAG)</div>', unsafe_allow_html=True)
+        for doc_name, excerpt in rag_docs:
+            st.markdown(f"""
+            <div class="rag-item">
+                <div class="rag-icon">📄</div>
+                <div class="rag-content">
+                    <div class="rag-doc">{doc_name}</div>
+                    <div class="rag-excerpt">{excerpt}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+        ticket_html = f'<div class="meta-chip">Ticket <span>#{ticket_id}</span></div>' if ticket_id else ""
+    
+        # AI Response
+        html_content = f"""
+        <div class="card">
+            <div class="card-title">{t("ai_response_title", lang)}</div>
+            <div class="response-box">
+                <div class="response-label">{t("ai_assistant", lang)}</div>
+                <div class="response-text">{ai_reply}</div>
+                <div class="meta-row">
+                    <div class="meta-chip">Account <span>{account_type}</span></div>
+                    <div class="meta-chip">Department <span>{department}</span></div>
+                    <div class="meta-chip">Category <span>{category}</span></div>{ticket_html}
+                </div>
+                <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(0,0,0,0.15); border-radius: 8px; font-size: 0.8rem; border-left: 3px solid var(--accent-blue);">
+                    <strong style="color:var(--text-muted); font-family: 'JetBrains Mono', monospace;">GROQ REASONING:</strong> {reasoning}
+                </div>
             </div>
         </div>
-        <div style="color:var(--text-muted);font-size:.8rem;margin-bottom:.4rem;">Model Confidence</div>
-        <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:{int(confidence*100)}%"></div></div>
-        <div style="color:var(--text-muted);font-size:.75rem;margin-top:.4rem;text-align:right;">{int(confidence*100)}%</div>
+        """
+        st.markdown(html_content, unsafe_allow_html=True)
+    
+        # Actions
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.button(t("btn_callback", lang))
+        with c2:
+            st.button(t("btn_email", lang))
+        with c3:
+            if ticket_id:
+                st.button(t("btn_resolved", lang), on_click=mark_resolved, args=(ticket_id,))
+            else:
+                st.button(t("btn_resolved", lang))
+    
+    elif submitted:
+        st.warning("Please enter your feedback before submitting.")
+    
+    # Footer
+    st.markdown("""
+    <div style="text-align:center;margin-top:3rem;color:var(--text-muted);font-size:.75rem;font-family:'JetBrains Mono',monospace;">
+        TELECOMAI BRAND INTELLIGENCE SYSTEM &nbsp;·&nbsp; CUSTOMER PORTAL v2.1
     </div>
     """, unsafe_allow_html=True)
 
-    # RAG Documents
-    st.markdown('<div class="card"><div class="card-title">✦ Retrieved Policy Documents (RAG)</div>', unsafe_allow_html=True)
-    for doc_name, excerpt in rag_docs:
-        st.markdown(f"""
-        <div class="rag-item">
-            <div class="rag-icon">📄</div>
-            <div class="rag-content">
-                <div class="rag-doc">{doc_name}</div>
-                <div class="rag-excerpt">{excerpt}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+with tab_rag:
+    # ── Upload Section
+    st.markdown('<div class="card" style="margin-top: 1rem;"><div class="card-title">✦ Upload New Document</div>', unsafe_allow_html=True)
 
-    ticket_html = f'<div class="meta-chip">Ticket <span>#{ticket_id}</span></div>' if ticket_id else ""
+    uploaded_file = st.file_uploader("Select PDF or TXT File", type=["pdf", "txt"], help="Supported formats: PDF, TXT")
 
-    # AI Response
-    html_content = f"""
-    <div class="card">
-        <div class="card-title">{t("ai_response_title", lang)}</div>
-        <div class="response-box">
-            <div class="response-label">{t("ai_assistant", lang)}</div>
-            <div class="response-text">{ai_reply}</div>
-            <div class="meta-row">
-                <div class="meta-chip">Account <span>{account_type}</span></div>
-                <div class="meta-chip">Department <span>{department}</span></div>
-                <div class="meta-chip">Category <span>{category}</span></div>{ticket_html}
-            </div>
-            <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(0,0,0,0.15); border-radius: 8px; font-size: 0.8rem; border-left: 3px solid var(--accent-blue);">
-                <strong style="color:var(--text-muted); font-family: 'JetBrains Mono', monospace;">GROQ REASONING:</strong> {reasoning}
-            </div>
-        </div>
-    </div>
-    """
-    st.markdown(html_content, unsafe_allow_html=True)
-
-    # Actions
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.button(t("btn_callback", lang))
-    with c2:
-        st.button(t("btn_email", lang))
-    with c3:
-        if ticket_id:
-            st.button(t("btn_resolved", lang), on_click=mark_resolved, args=(ticket_id,))
+    if st.button("🚀 Upload & Index Document"):
+        if uploaded_file is not None:
+            with st.spinner("Processing and indexing document..."):
+                try:
+                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                    res = requests.post("http://127.0.0.1:8000/upload", files=files)
+                    
+                    if res.status_code == 200:
+                        st.success(f"Successfully uploaded and indexed: {uploaded_file.name}")
+                    else:
+                        st.error(f"Failed to upload. Status {res.status_code}: {res.text}")
+                except requests.exceptions.ConnectionError:
+                    st.error("Failed to connect to the backend API. Is FastAPI running on port 8000?")
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
         else:
-            st.button(t("btn_resolved", lang))
+            st.warning("Please select a file to upload.")
 
-elif submitted:
-    st.warning("Please enter your feedback before submitting.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Footer
-st.markdown("""
-<div style="text-align:center;margin-top:3rem;color:var(--text-muted);font-size:.75rem;font-family:'JetBrains Mono',monospace;">
-    TELECOMAI BRAND INTELLIGENCE SYSTEM &nbsp;·&nbsp; CUSTOMER PORTAL v2.1
-</div>
-""", unsafe_allow_html=True)
+    # ── Audit Section
+    st.markdown('<div class="card"><div class="card-title">✦ Active Policy Documents</div>', unsafe_allow_html=True)
+    
+    def delete_doc(filename):
+        try:
+            res = requests.delete(f"http://127.0.0.1:8000/documents/{filename}")
+            if res.status_code == 200:
+                st.toast(f"✅ Deleted {filename} and rebuilt index!")
+            else:
+                st.error(f"Failed to delete {filename}: {res.text}")
+        except Exception as e:
+            st.error(f"API Error: {str(e)}")
+
+    try:
+        res = requests.get("http://127.0.0.1:8000/documents")
+        if res.status_code == 200:
+            docs = res.json().get("documents", [])
+            if not docs:
+                st.info("No custom documents uploaded yet. Using default telecom policies.")
+            else:
+                for doc in docs:
+                    st.markdown(f"""
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem; border:1px solid var(--border); border-radius:8px; margin-bottom:0.4rem; background:var(--bg-hover);">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; color:var(--text-primary); margin-bottom:0.3rem;">📄 {doc['filename']}</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-family:'JetBrains Mono', monospace;">{doc['size_kb']} KB</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.button("🗑️ Delete Document", key=f"del_{doc['filename']}", on_click=delete_doc, args=(doc['filename'],), use_container_width=True)
+                    st.markdown("<div style='margin-bottom:1.2rem;'></div>", unsafe_allow_html=True)
+        else:
+            st.error("Failed to load documents.")
+    except Exception:
+        st.warning("Backend API is unreachable. Cannot load documents.")
+        
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Query Test Section
+    st.markdown('<div class="card"><div class="card-title">✦ Test RAG Retrieval</div>', unsafe_allow_html=True)
+
+    test_query = st.text_input("Test query to the RAG system", placeholder="e.g. What is the SLA for network outages?")
+
+    if st.button("🔍 Query System"):
+        if test_query:
+            with st.spinner("Retrieving from knowledge base..."):
+                try:
+                    payload = {"question": test_query, "username": "admin_test"}
+                    res = requests.post("http://127.0.0.1:8000/ask", json=payload)
+                    
+                    if res.status_code == 200:
+                        data = res.json()
+                        st.markdown(f"""
+                        <div class="response-box" style="margin-top: 1rem;">
+                            <div style="font-size:0.75rem; color:var(--accent-cyan); margin-bottom:0.8rem; font-family:'JetBrains Mono', monospace;">AI GENERATED RESPONSE</div>
+                            <div style="font-size:0.95rem; line-height:1.6; color:var(--text-primary);">{data.get('answer', 'No answer')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        with st.expander("View Retrieved Context & Metadata"):
+                            st.write(f"**Confidence Score:** {data.get('confidence', 0)}")
+                            st.markdown("**Context Used:**")
+                            st.info(data.get('context', 'No context retrieved'))
+                    else:
+                        st.error(f"Failed to query. Status {res.status_code}: {res.text}")
+                except requests.exceptions.ConnectionError:
+                    st.error("Failed to connect to the backend API. Is FastAPI running on port 8000?")
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
+        else:
+            st.warning("Please enter a question to test.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Footer
+    st.markdown("""
+    <div style="text-align:center;margin-top:3rem;color:var(--text-muted);font-size:.75rem;font-family:'JetBrains Mono',monospace;">
+        TELECOMAI BRAND INTELLIGENCE SYSTEM &nbsp;·&nbsp; RAG INDEXING PORTAL
+    </div>
+    """, unsafe_allow_html=True)

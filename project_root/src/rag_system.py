@@ -11,10 +11,34 @@ from pathlib import Path
 from typing import List, TypedDict
 
 import numpy as np
+import subprocess
+import sys
+import os
+
+# Dynamically install required BM25 packages if they are missing
+try:
+    import rank_bm25
+    from llama_index.retrievers.bm25 import BM25Retriever
+except ImportError:
+    try:
+        print("Installing required BM25 packages for Hybrid Search...")
+        python_exe = sys.executable
+        if 'uvicorn' in python_exe.lower():
+            python_exe = os.path.join(os.path.dirname(python_exe), 'python.exe')
+        subprocess.check_call([python_exe, "-m", "pip", "install", "llama-index-retrievers-bm25", "rank_bm25"])
+        import rank_bm25
+        from llama_index.retrievers.bm25 import BM25Retriever
+    except Exception as e:
+        print(f"Failed to install BM25 dependencies: {e}. Hybrid search will be disabled.")
+        # Fallback dummy class to prevent NameError later
+        class BM25Retriever:
+            @classmethod
+            def from_defaults(cls, *args, **kwargs):
+                raise ImportError("BM25 packages are missing.")
 
 # Load environment variables (e.g., GROQ_API_KEY) from a .env file if present
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 from langgraph.graph import StateGraph, END
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext, load_index_from_storage, Settings
@@ -64,17 +88,16 @@ def ingest_uploaded_file(file_path: Path):
         text = file_path.read_text(encoding="utf-8")
         
     chunks = chunk_text(text)
-    from llama_index.core import Document
-    documents = [Document(text=chunk) for chunk in chunks]
+    from llama_index.core.schema import TextNode
+    nodes = [TextNode(text=chunk) for chunk in chunks]
     
     if not os.path.exists(storage_dir):
-        index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
+        index = VectorStoreIndex(nodes, embed_model=embed_model)
         index.storage_context.persist(persist_dir=storage_dir)
     else:
         storage_context = StorageContext.from_defaults(persist_dir=storage_dir)
         index = load_index_from_storage(storage_context, embed_model=embed_model)
-        for doc in documents:
-            index.insert(doc)
+        index.insert_nodes(nodes)
         index.storage_context.persist(persist_dir=storage_dir)
 
 def startup_and_ingest(state: GraphState):
@@ -83,8 +106,17 @@ def startup_and_ingest(state: GraphState):
     
     if not os.path.exists(storage_dir):
         # Ingest default data if index is missing
-        documents = SimpleDirectoryReader(input_files=[str(DATA_PATH)]).load_data()
-        index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
+        try:
+            from .contract_parser import chunk_text
+        except ImportError:
+            from src.contract_parser import chunk_text
+            
+        text = DATA_PATH.read_text(encoding="utf-8")
+        chunks = chunk_text(text)
+        from llama_index.core.schema import TextNode
+        nodes = [TextNode(text=chunk) for chunk in chunks]
+        
+        index = VectorStoreIndex(nodes, embed_model=embed_model)
         index.storage_context.persist(persist_dir=storage_dir)
     else:
         # Load existing FAISS/Vector index
@@ -99,8 +131,37 @@ def retrieve(state: GraphState):
     storage_context = StorageContext.from_defaults(persist_dir=storage_dir)
     index = load_index_from_storage(storage_context, embed_model=embed_model)
     
-    retriever = index.as_retriever(similarity_top_k=5)
-    retrieved_nodes = retriever.retrieve(state["question"])
+    # 1. Vector Search
+    vector_retriever = index.as_retriever(similarity_top_k=5)
+    
+    # 2. BM25 Sparse Search (Lexical)
+    # Get nodes from the docstore to build the BM25 index
+    nodes = list(storage_context.docstore.docs.values())
+    try:
+        bm25_retriever = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
+        
+        # 3. Hybrid Retrieval with Manual Reciprocal Rank Fusion (RRF)
+        vector_results = vector_retriever.retrieve(state["question"])
+        bm25_results = bm25_retriever.retrieve(state["question"])
+        
+        rrf_scores = {}
+        node_map = {}
+        c = 60
+        
+        for results in [vector_results, bm25_results]:
+            for rank, node_with_score in enumerate(results):
+                node_id = node_with_score.node.node_id
+                if node_id not in rrf_scores:
+                    rrf_scores[node_id] = 0.0
+                    node_map[node_id] = node_with_score
+                rrf_scores[node_id] += 1.0 / (rank + 1 + c)
+                
+        sorted_node_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)
+        retrieved_nodes = [node_map[nid] for nid in sorted_node_ids[:5]]
+        
+    except Exception as e:
+        print(f"Hybrid search failed, falling back to vector search: {e}")
+        retrieved_nodes = vector_retriever.retrieve(state["question"])
     
     # Concatenate retrieved chunks into context_text
     context = "\n\n".join([node.get_text() for node in retrieved_nodes])
@@ -109,14 +170,22 @@ def retrieve(state: GraphState):
 
 def generate(state: GraphState):
     print("--- STEP: GENERATE RESPONSE ---")
+    # Dynamically reload environment variables to ensure the latest API key is used
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
     
     # Build Prompt
     system_prompt = (
-        "You are an expert AI assistant for a telecom company. Answer the user's question accurately "
-        "using ONLY the provided context. If the user's question is a slight rephrasing or synonym "
-        "of information in the context, connect the concepts and answer clearly. "
-        "If the context does not contain the answer, reply exactly with 'I don't know'.\n\n"
+        "You are an expert AI assistant for a telecom company. Answer the user's inquiry accurately "
+        "using ONLY the provided context.\n"
+        "IMPORTANT RULES:\n"
+        "1. Be concise and direct. Provide a single, unified answer.\n"
+        "2. Do NOT just summarize every section where a topic is mentioned. Instead, synthesize the core rules or definitions into a cohesive response.\n"
+        "3. Do NOT say 'According to section X' or 'Context mentions...' unless explicitly asked for references.\n"
+        "4. If the user just provides a keyword (e.g., 'Access control'), provide a brief, comprehensive summary of the policy regarding that keyword.\n"
+        "5. If the user's question is vague (e.g., 'how much is the cost'), but the context contains pricing or relevant info, list the relevant options found in the context instead of saying you don't know.\n"
+        "6. ONLY if the context is completely irrelevant to the query, reply exactly with 'I don't know'.\n\n"
         f"CONTEXT:\n{state['context']}"
     )
     
@@ -159,6 +228,9 @@ class GradeHallucination(BaseModel):
 # 2. Define the Hallucination Grader Node with Score
 def hallucination_grader_with_score(state: GraphState):
     print("--- STEP: GRADING CONFIDENCE ---")
+    # Dynamically reload environment variables to ensure the latest API key is used
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
     
     import json
@@ -173,11 +245,11 @@ def hallucination_grader_with_score(state: GraphState):
     )
     
     completion = client.chat.completions.create(
-        messages=[{"role": "system", "content": grading_prompt}],
-        model="llama-3.3-70b-versatile",
-        temperature=0.0,
-        response_format={"type": "json_object"}
-    )
+            messages=[{"role": "system", "content": grading_prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.0,
+            response_format={"type": "json_object"}
+        )
     
     result = completion.choices[0].message.content
     

@@ -20,3 +20,5 @@ langgraph
 llama-index
 llama-index-embeddings-huggingface
 plotly
+rank_bm25
+llama-index-retrievers-bm25

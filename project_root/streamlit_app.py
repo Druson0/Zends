@@ -52,13 +52,12 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    nav_options = [t("nav_analyst", lang), t("nav_customer", lang), t("nav_rag", lang)]
+    nav_options = [t("nav_analyst", lang), t("nav_customer", lang)]
     app_mode_translated = st.radio("", nav_options)
 
 internal_modes = [
     "Telecom Brand Analyst Dashboard",
     "Customer User Interface",
-    "RAG Document Management",
 ]
 app_mode = internal_modes[nav_options.index(app_mode_translated)]
 
@@ -84,8 +83,6 @@ st.markdown(f"""
 # ── Load & exec sub-module ───────────────────────────────────────────────────
 if app_mode == "Customer User Interface":
     file_path = os.path.join(parent_dir, "customer_ui.py")
-elif app_mode == "RAG Document Management":
-    file_path = os.path.join(parent_dir, "rag_management.py")
 else:
     file_path = os.path.join(parent_dir, "analyst_dashboard.py")
 

@@ -10,6 +10,7 @@ import os
 import shutil
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, status, File, UploadFile
+from typing import List
 from pydantic import BaseModel
 
 # Import the RAG response generator
@@ -61,18 +62,45 @@ async def login_user(user: UserAuth):
 
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
-    """Upload a document, save it, and ingest it into the RAG system."""
+    """Upload a single document, save it, and ingest it into the RAG system."""
     try:
         file_path = UPLOAD_DIR / file.filename
+        # Warn in response if overwriting an existing file
+        already_existed = file_path.exists()
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        
+
         # Ingest the file into the RAG system
         ingest_uploaded_file(file_path)
-        
-        return {"message": f"Successfully uploaded and indexed {file.filename}"}
+
+        msg = f"Successfully uploaded and indexed {file.filename}"
+        if already_existed:
+            msg += " (existing file overwritten)"
+        return {"message": msg}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+
+@app.post("/upload-batch")
+async def upload_documents_batch(files: List[UploadFile] = File(...)):
+    """Upload multiple documents at once and ingest each into the RAG system."""
+    results = []
+    for file in files:
+        try:
+            file_path = UPLOAD_DIR / file.filename
+            already_existed = file_path.exists()
+            contents = await file.read()
+            with file_path.open("wb") as buffer:
+                buffer.write(contents)
+
+            ingest_uploaded_file(file_path)
+            msg = f"Indexed {file.filename}"
+            if already_existed:
+                msg += " (overwritten)"
+            results.append({"filename": file.filename, "status": "ok", "message": msg})
+        except Exception as e:
+            results.append({"filename": file.filename, "status": "error", "message": str(e)})
+    return {"results": results}
 
 @app.post("/ask")
 async def ask_question(request: QueryRequest):

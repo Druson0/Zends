@@ -177,25 +177,46 @@ with tab_upload:
     # ── Upload Section
     st.markdown('<div class="card"><div class="card-title">✦ Upload New Document</div>', unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Select PDF or TXT File", type=["pdf", "txt"], help="Supported formats: PDF, TXT")
+    uploaded_files = st.file_uploader(
+        "Select PDF or TXT Files",
+        type=["pdf", "txt"],
+        accept_multiple_files=True,
+        help="Supported formats: PDF, TXT. You can select multiple files at once."
+    )
 
-    if st.button("🚀 Upload & Index Document"):
-        if uploaded_file is not None:
-            with st.spinner("Processing and indexing document..."):
+    if st.button("🚀 Upload & Index Documents"):
+        if uploaded_files:
+            success_count = 0
+            fail_count = 0
+            progress = st.progress(0, text="Starting uploads...")
+            total = len(uploaded_files)
+
+            for i, uploaded_file in enumerate(uploaded_files):
+                progress.progress((i) / total, text=f"Uploading {uploaded_file.name}…")
                 try:
                     files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
                     res = requests.post("http://127.0.0.1:8000/upload", files=files)
-                    
                     if res.status_code == 200:
-                        st.success(f"Successfully uploaded and indexed: {uploaded_file.name}")
+                        st.success(f"✅ Indexed: **{uploaded_file.name}**")
+                        success_count += 1
                     else:
-                        st.error(f"Failed to upload. Status {res.status_code}: {res.text}")
+                        st.error(f"❌ Failed [{uploaded_file.name}] — Status {res.status_code}: {res.text}")
+                        fail_count += 1
                 except requests.exceptions.ConnectionError:
-                    st.error("Failed to connect to the backend API. Is FastAPI running on port 8000?")
+                    st.error("❌ Cannot reach backend API (port 8000). Is FastAPI running?")
+                    fail_count += 1
+                    break
                 except Exception as e:
-                    st.error(f"An error occurred: {str(e)}")
+                    st.error(f"❌ Error uploading {uploaded_file.name}: {str(e)}")
+                    fail_count += 1
+
+            progress.progress(1.0, text="Done!")
+            if success_count:
+                st.info(f"**{success_count} of {total}** file(s) uploaded and indexed successfully.")
+            if fail_count:
+                st.warning(f"**{fail_count}** file(s) failed to upload.")
         else:
-            st.warning("Please select a file to upload.")
+            st.warning("Please select at least one file to upload.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 

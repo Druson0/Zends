@@ -1,5 +1,41 @@
 [
   {
+    "id": "FB-17685",
+    "timestamp": "2026-05-18T14:34:14.815995",
+    "category": "Plan & Subscription",
+    "sentiment": "Neutral",
+    "feedback": "migrated to the new plann yesterdy. price is alrite but im waiting to see if the covrage actually improves like u promised \ud83e\uddd0\ud83d\udcf1",
+    "confidence": 80,
+    "status": "No Action"
+  },
+  {
+    "id": "TCK-497382",
+    "timestamp": "2026-05-18T12:25:24.420553",
+    "category": "Customer Support",
+    "sentiment": "Negative",
+    "feedback": "its the worst serives i have ever received on customer support",
+    "confidence": 100,
+    "status": "Pending"
+  },
+  {
+    "id": "TCK-161483",
+    "timestamp": "2026-05-16T22:13:39.455345",
+    "category": "Network Connectivity",
+    "sentiment": "Negative",
+    "feedback": "\n\"The singal droped again while I was on a super imprtant call!! \ud83d\ude21\ud83e\udd2c Fix your awfull network immediatly. I am swiching providers tomorow. \ud83d\udcc9\ud83d\udeab\"",
+    "confidence": 100,
+    "status": "Resolved"
+  },
+  {
+    "id": "TCK-923267",
+    "timestamp": "2026-05-07T07:36:59.990519",
+    "category": "Network Connectivity",
+    "sentiment": "Negative",
+    "feedback": "The network coverage is worst and my ping reaches 300ms\ud83d\udc4e",
+    "confidence": 100,
+    "status": "Pending"
+  },
+  {
     "id": "TCK-102260",
     "timestamp": "2026-05-06T22:13:57.043968",
     "category": "Voice & Calls",
